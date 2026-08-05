@@ -22,6 +22,12 @@ The project focuses on a [Scenic](https://scenic-lang.org/) inspired validation 
 6. Optional OpenAI and AWS Bedrock provider integrations.
 7. Tests, CI, documentation, and portfolio polish.
 
+## Current Status
+
+The project now has a small Scenic inspired sample trace and a deterministic safety analyzer. It can load simulation time series data, group it by run, calculate safety metrics, rank the riskiest runs, and produce release oriented findings.
+
+The next phase will expose the analyzer through a FastAPI backend.
+
 ## Local Setup
 
 ```powershell
@@ -30,7 +36,17 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 ```
 
-The runnable application code is added phase by phase.
+Run the tests:
+
+```powershell
+python -m pytest
+```
+
+Run a quick local analysis check:
+
+```powershell
+python -c "from app.analyzer import analyze_trace, load_trace_points; r = analyze_trace(load_trace_points()); print(r.run_count, r.collision_rate, r.run_summaries[0].run_id)"
+```
 
 ## Portfolio Positioning
 
