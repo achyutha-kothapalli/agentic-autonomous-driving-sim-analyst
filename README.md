@@ -4,6 +4,12 @@ A production style AI application for analyzing autonomous driving simulation tr
 
 The project focuses on a [Scenic](https://scenic-lang.org/) inspired validation scenario: a badly parked vehicle begins moving into the ego lane while the ego vehicle approaches. The first version uses a small example trace so the app can run locally without a heavyweight simulator.
 
+## What It Does Today
+
+The app loads a small Scenic inspired trace, calculates safety metrics, ranks the riskiest simulation runs, and shows the results in a browser dashboard.
+
+It also has a local agentic synthesis layer. That layer turns the raw analysis into a release decision, agent steps, human-AI handoff notes, governance checks, and next actions. The app works without model credentials, and can optionally use OpenAI or AWS Bedrock for the executive summary.
+
 ## Project Goals
 
 - Analyze autonomous driving simulation traces.
@@ -12,21 +18,17 @@ The project focuses on a [Scenic](https://scenic-lang.org/) inspired validation 
 - Generate governance aware validation recommendations.
 - Provide a clear path from deterministic analysis to optional OpenAI or AWS Bedrock synthesis.
 
-## Planned Phases
+## Current Features
 
-1. Project skeleton and local development setup.
-2. Simulation trace data model and deterministic safety analysis.
-3. FastAPI backend for production style APIs.
-4. Browser dashboard with separated HTML, CSS, and JavaScript.
-5. Agentic synthesis pipeline with local fallback.
-6. Optional OpenAI and AWS Bedrock provider integrations.
-7. Tests, CI, documentation, and portfolio polish.
-
-## Current Status
-
-The project has a small Scenic inspired sample trace, a deterministic safety analyzer, a FastAPI backend, a browser dashboard, and an agentic synthesis layer. It works locally without model credentials and can optionally use OpenAI or AWS Bedrock for the executive summary.
-
-The next phase will add CI and final portfolio polish.
+- FastAPI backend
+- Browser dashboard with separate HTML, CSS, and JavaScript
+- Scenic inspired sample trace
+- Deterministic safety scoring
+- Local agentic synthesis
+- Optional OpenAI and AWS Bedrock provider modes
+- Streaming synthesis endpoint
+- Pytest test suite
+- GitHub Actions test workflow
 
 ## Local Setup
 
@@ -48,12 +50,6 @@ Run the tests:
 python -m pytest
 ```
 
-Run a quick local analysis check:
-
-```powershell
-python -c "from app.analyzer import analyze_trace, load_trace_points; r = analyze_trace(load_trace_points()); print(r.run_count, r.collision_rate, r.run_summaries[0].run_id)"
-```
-
 Start the app:
 
 ```powershell
@@ -64,6 +60,17 @@ Open the dashboard:
 
 ```text
 http://127.0.0.1:8000
+```
+
+## API Endpoints
+
+```text
+GET /
+GET /api/health
+GET /api/trace
+GET /api/report
+GET /api/agentic-report
+GET /api/agentic-report/stream
 ```
 
 Check the API:
@@ -101,16 +108,24 @@ $env:BEDROCK_MODEL_ID = "amazon.nova-lite-v1:0"
 
 If a provider package, key, or cloud permission is missing, the app falls back to the local synthesis so the dashboard still works.
 
-## API Endpoints
+## Project Phases
 
-```text
-GET /
-GET /api/health
-GET /api/trace
-GET /api/report
-GET /api/agentic-report
-GET /api/agentic-report/stream
-```
+1. Project skeleton and local development setup.
+2. Simulation trace data model and deterministic safety analysis.
+3. FastAPI backend for production style APIs.
+4. Browser dashboard with separated HTML, CSS, and JavaScript.
+5. Agentic synthesis pipeline with local fallback.
+6. Optional OpenAI and AWS Bedrock provider integrations.
+7. Tests, CI, documentation, and portfolio polish.
+
+## Roadmap
+
+- Add upload support for new trace files.
+- Add real Scenic generated data.
+- Add CARLA or MetaDrive simulation export examples.
+- Add scenario mutation suggestions.
+- Add persistence for analysis history.
+- Deploy the API and dashboard.
 
 ## Portfolio Positioning
 
