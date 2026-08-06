@@ -24,9 +24,9 @@ The project focuses on a [Scenic](https://scenic-lang.org/) inspired validation 
 
 ## Current Status
 
-The project has a small Scenic inspired sample trace, a deterministic safety analyzer, a FastAPI backend, and a browser dashboard. It can load simulation time series data, calculate safety metrics, rank the riskiest runs, and show the report in a simple UI.
+The project has a small Scenic inspired sample trace, a deterministic safety analyzer, a FastAPI backend, a browser dashboard, and a local agentic synthesis layer. It can rank risky simulation runs, explain the release decision, and show how analysis work is split across trace, safety, governance, and release review roles.
 
-The next phase will add the agentic synthesis layer.
+The next phase will add optional OpenAI and AWS Bedrock providers.
 
 ## Local Setup
 
@@ -65,6 +65,8 @@ Check the API:
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/health
 Invoke-RestMethod http://127.0.0.1:8000/api/report
+Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report
+Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report/stream
 ```
 
 ## API Endpoints
@@ -74,6 +76,8 @@ GET /
 GET /api/health
 GET /api/trace
 GET /api/report
+GET /api/agentic-report
+GET /api/agentic-report/stream
 ```
 
 ## Portfolio Positioning

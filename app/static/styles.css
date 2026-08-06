@@ -5,6 +5,8 @@
   --line: #d8dee3;
   --panel: #ffffff;
   --surface: #f4f7f8;
+  --tag: #e6f0fb;
+  --tag-text: #064e8a;
   --danger: #b91c1c;
   --warn: #9a5a05;
   --ok: #047857;
@@ -94,6 +96,17 @@ h2 {
   letter-spacing: 0;
 }
 
+h3 {
+  margin: 14px 0 8px;
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 ul {
   margin: 0;
   padding-left: 19px;
@@ -135,15 +148,31 @@ dd {
   font-weight: 650;
 }
 
+.badge,
+.provider {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .badge {
   min-width: 84px;
   align-self: start;
-  border-radius: 999px;
-  padding: 6px 10px;
   text-align: center;
-  font-size: 13px;
-  font-weight: 700;
   text-transform: capitalize;
+}
+
+.provider {
+  display: inline-block;
+  margin-bottom: 8px;
+  background: var(--tag);
+  color: var(--tag-text);
+}
+
+.decision {
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .low {

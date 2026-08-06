@@ -40,12 +40,29 @@ function renderRuns(report) {
   `).join("");
 }
 
+function renderSynthesis(synthesis) {
+  document.getElementById("synthesis").innerHTML = `
+    <span class="provider">${synthesis.provider}</span>
+    <p class="decision">${synthesis.release_decision}</p>
+    <p>${synthesis.executive_summary}</p>
+    <h3>Agent steps</h3>
+    <ul>${synthesis.agent_steps.map((step) => `<li>${step.name}: ${step.role}</li>`).join("")}</ul>
+    <h3>Human-AI handoff</h3>
+    <ul>${synthesis.human_ai_handoff.map((item) => `<li>${item}</li>`).join("")}</ul>
+  `;
+}
+
 async function loadDashboard() {
-  const response = await fetch("/api/report");
-  const report = await response.json();
+  const [reportResponse, synthesisResponse] = await Promise.all([
+    fetch("/api/report"),
+    fetch("/api/agentic-report"),
+  ]);
+  const report = await reportResponse.json();
+  const synthesis = await synthesisResponse.json();
 
   renderMetrics(report);
   renderRuns(report);
+  renderSynthesis(synthesis);
   renderList("risks", report.top_risks);
   renderList("recommendations", report.recommendations);
   renderList("governance", report.governance_checks);

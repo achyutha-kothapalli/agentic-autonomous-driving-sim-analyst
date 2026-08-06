@@ -40,3 +40,19 @@ class AnalysisReport(BaseModel):
     recommendations: list[str]
     governance_checks: list[str]
     run_summaries: list[RunSummary]
+
+
+class AgentStep(BaseModel):
+    name: str
+    role: str
+    output: list[str]
+
+
+class AgenticReport(BaseModel):
+    provider: str
+    release_decision: str
+    executive_summary: str
+    agent_steps: list[AgentStep]
+    process_architecture: list[str]
+    human_ai_handoff: list[str]
+    next_actions: list[str]
