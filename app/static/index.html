@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agentic Autonomous Driving Simulation Analyst</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Agentic Autonomous Driving Simulation Analyst</h1>
+      <p>
+        Safety analysis for Scenic inspired autonomous driving simulation traces. The dashboard ranks risky runs, explains what failed, and gives validation teams a release focused view.
+      </p>
+    </header>
+
+    <main>
+      <section class="metrics" id="metrics"></section>
+
+      <section class="layout">
+        <section class="panel">
+          <h2>Run Risk Ranking</h2>
+          <div class="runs" id="runs"></div>
+        </section>
+
+        <aside>
+          <section class="panel">
+            <h2>Top Risks</h2>
+            <ul id="risks"></ul>
+          </section>
+
+          <section class="panel">
+            <h2>Recommendations</h2>
+            <ul id="recommendations"></ul>
+          </section>
+
+          <section class="panel">
+            <h2>Governance Checks</h2>
+            <ul id="governance"></ul>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
