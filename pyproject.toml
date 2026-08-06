@@ -10,6 +10,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+ai = [
+    "boto3>=1.35.0",
+    "openai>=1.40.0",
+]
 dev = [
     "pytest>=8.0.0",
 ]

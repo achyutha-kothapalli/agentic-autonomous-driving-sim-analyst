@@ -1,7 +1,38 @@
+import json
+import os
+
 from app.models import AgentStep, AgenticReport, AnalysisReport
 
 
 def build_agentic_report(report: AnalysisReport) -> AgenticReport:
+    local_report = _build_local_report(report)
+    provider = os.getenv("AI_PROVIDER", "local").strip().lower()
+
+    if provider == "openai" and os.getenv("OPENAI_API_KEY"):
+        return _try_openai_synthesis(report, local_report)
+    if provider == "bedrock":
+        return _try_bedrock_synthesis(report, local_report)
+    return local_report
+
+
+def stream_agentic_report(report: AgenticReport):
+    yield f"provider: {report.provider}\n"
+    yield f"release_decision: {report.release_decision}\n\n"
+    yield "executive_summary:\n"
+    yield report.executive_summary + "\n\n"
+
+    yield "agent_steps:\n"
+    for step in report.agent_steps:
+        yield f"- {step.name}: {step.role}\n"
+        for item in step.output:
+            yield f"  - {item}\n"
+
+    yield "\nnext_actions:\n"
+    for action in report.next_actions:
+        yield f"- {action}\n"
+
+
+def _build_local_report(report: AnalysisReport) -> AgenticReport:
     worst_run = report.run_summaries[0]
     release_decision = _release_decision(report)
 
@@ -39,21 +70,73 @@ def build_agentic_report(report: AnalysisReport) -> AgenticReport:
     )
 
 
-def stream_agentic_report(report: AgenticReport):
-    yield f"provider: {report.provider}\n"
-    yield f"release_decision: {report.release_decision}\n\n"
-    yield "executive_summary:\n"
-    yield report.executive_summary + "\n\n"
+def _try_openai_synthesis(report: AnalysisReport, fallback: AgenticReport) -> AgenticReport:
+    try:
+        from openai import OpenAI
 
-    yield "agent_steps:\n"
-    for step in report.agent_steps:
-        yield f"- {step.name}: {step.role}\n"
-        for item in step.output:
-            yield f"  - {item}\n"
+        model = os.getenv("OPENAI_MODEL", "gpt-5-nano")
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model=model,
+            temperature=0.2,
+            messages=[
+                {"role": "system", "content": _synthesis_system_prompt()},
+                {"role": "user", "content": _synthesis_prompt(report, fallback)},
+            ],
+        )
+        text = response.choices[0].message.content or fallback.executive_summary
+        return fallback.model_copy(
+            update={
+                "provider": f"openai:{model}",
+                "executive_summary": text.strip(),
+            }
+        )
+    except Exception:
+        return fallback
 
-    yield "\nnext_actions:\n"
-    for action in report.next_actions:
-        yield f"- {action}\n"
+
+def _try_bedrock_synthesis(report: AnalysisReport, fallback: AgenticReport) -> AgenticReport:
+    try:
+        import boto3
+
+        region = os.getenv("DEFAULT_AWS_REGION", "us-east-1")
+        model = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0")
+        client = boto3.client("bedrock-runtime", region_name=region)
+        response = client.converse(
+            modelId=model,
+            system=[{"text": _synthesis_system_prompt()}],
+            messages=[{"role": "user", "content": [{"text": _synthesis_prompt(report, fallback)}]}],
+            inferenceConfig={"temperature": 0.2},
+        )
+        text = response["output"]["message"]["content"][0]["text"]
+        return fallback.model_copy(
+            update={
+                "provider": f"bedrock:{model}",
+                "executive_summary": text.strip(),
+            }
+        )
+    except Exception:
+        return fallback
+
+
+def _synthesis_system_prompt() -> str:
+    return (
+        "You are an autonomous driving validation lead. Write a concise release review summary "
+        "from the simulation analysis. Do not claim that real simulator execution happened unless "
+        "the input explicitly says so."
+    )
+
+
+def _synthesis_prompt(report: AnalysisReport, fallback: AgenticReport) -> str:
+    payload = {
+        "analysis": report.model_dump(mode="json"),
+        "local_synthesis": fallback.model_dump(mode="json"),
+    }
+    return (
+        "Summarize the validation risk for engineering and governance stakeholders. "
+        "Mention the release decision, highest risk run, main safety concerns, and human review needs.\n\n"
+        + json.dumps(payload, indent=2)
+    )
 
 
 def _trace_analyst_step(report: AnalysisReport) -> AgentStep:

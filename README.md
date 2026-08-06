@@ -24,9 +24,9 @@ The project focuses on a [Scenic](https://scenic-lang.org/) inspired validation 
 
 ## Current Status
 
-The project has a small Scenic inspired sample trace, a deterministic safety analyzer, a FastAPI backend, a browser dashboard, and a local agentic synthesis layer. It can rank risky simulation runs, explain the release decision, and show how analysis work is split across trace, safety, governance, and release review roles.
+The project has a small Scenic inspired sample trace, a deterministic safety analyzer, a FastAPI backend, a browser dashboard, and an agentic synthesis layer. It works locally without model credentials and can optionally use OpenAI or AWS Bedrock for the executive summary.
 
-The next phase will add optional OpenAI and AWS Bedrock providers.
+The next phase will add CI and final portfolio polish.
 
 ## Local Setup
 
@@ -34,6 +34,12 @@ The next phase will add optional OpenAI and AWS Bedrock providers.
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
+```
+
+Install optional AI provider SDKs:
+
+```powershell
+python -m pip install -e ".[ai,dev]"
 ```
 
 Run the tests:
@@ -68,6 +74,32 @@ Invoke-RestMethod http://127.0.0.1:8000/api/report
 Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report
 Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report/stream
 ```
+
+## AI Provider Modes
+
+Local mode is the default:
+
+```powershell
+$env:AI_PROVIDER = "local"
+```
+
+OpenAI mode:
+
+```powershell
+$env:AI_PROVIDER = "openai"
+$env:OPENAI_API_KEY = "your_key_here"
+$env:OPENAI_MODEL = "gpt-5-nano"
+```
+
+AWS Bedrock mode:
+
+```powershell
+$env:AI_PROVIDER = "bedrock"
+$env:DEFAULT_AWS_REGION = "us-east-1"
+$env:BEDROCK_MODEL_ID = "amazon.nova-lite-v1:0"
+```
+
+If a provider package, key, or cloud permission is missing, the app falls back to the local synthesis so the dashboard still works.
 
 ## API Endpoints
 

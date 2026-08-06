@@ -19,3 +19,20 @@ def test_stream_agentic_report_contains_decision():
 
     assert "release_decision" in streamed
     assert "Block release" in streamed
+
+
+def test_openai_mode_without_key_falls_back_to_local(monkeypatch):
+    monkeypatch.setenv("AI_PROVIDER", "openai")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    synthesis = build_agentic_report(analyze_trace(load_trace_points()))
+
+    assert synthesis.provider == "local deterministic synthesis"
+
+
+def test_unknown_provider_falls_back_to_local(monkeypatch):
+    monkeypatch.setenv("AI_PROVIDER", "not-a-provider")
+
+    synthesis = build_agentic_report(analyze_trace(load_trace_points()))
+
+    assert synthesis.provider == "local deterministic synthesis"
