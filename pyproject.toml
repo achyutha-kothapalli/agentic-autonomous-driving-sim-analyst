@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Agentic analysis of autonomous driving simulation traces."
 requires-python = ">=3.10"
 dependencies = [
+    "fastapi>=0.115.0",
     "pydantic>=2.8.0",
+    "uvicorn[standard]>=0.30.0",
 ]
 
 [project.optional-dependencies]

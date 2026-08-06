@@ -24,9 +24,9 @@ The project focuses on a [Scenic](https://scenic-lang.org/) inspired validation 
 
 ## Current Status
 
-The project now has a small Scenic inspired sample trace and a deterministic safety analyzer. It can load simulation time series data, group it by run, calculate safety metrics, rank the riskiest runs, and produce release oriented findings.
+The project has a small Scenic inspired sample trace, a deterministic safety analyzer, and a FastAPI backend. It can load simulation time series data, group it by run, calculate safety metrics, rank the riskiest runs, and return the analysis through API endpoints.
 
-The next phase will expose the analyzer through a FastAPI backend.
+The next phase will add a browser dashboard.
 
 ## Local Setup
 
@@ -46,6 +46,27 @@ Run a quick local analysis check:
 
 ```powershell
 python -c "from app.analyzer import analyze_trace, load_trace_points; r = analyze_trace(load_trace_points()); print(r.run_count, r.collision_rate, r.run_summaries[0].run_id)"
+```
+
+Start the API:
+
+```powershell
+python -m uvicorn app.main:app --reload
+```
+
+Check the API:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/health
+Invoke-RestMethod http://127.0.0.1:8000/api/report
+```
+
+## API Endpoints
+
+```text
+GET /api/health
+GET /api/trace
+GET /api/report
 ```
 
 ## Portfolio Positioning
