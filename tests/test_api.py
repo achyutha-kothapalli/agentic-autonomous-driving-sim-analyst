@@ -7,6 +7,7 @@ def test_api_routes_are_registered():
     assert "/api/health" in routes
     assert "/api/trace" in routes
     assert "/api/report" in routes
+    assert "/api/report/upload" in routes
     assert "/api/agentic-report" in routes
     assert "/api/agentic-report/stream" in routes
 

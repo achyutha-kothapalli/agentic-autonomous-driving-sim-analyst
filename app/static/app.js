@@ -52,14 +52,7 @@ function renderSynthesis(synthesis) {
   `;
 }
 
-async function loadDashboard() {
-  const [reportResponse, synthesisResponse] = await Promise.all([
-    fetch("/api/report"),
-    fetch("/api/agentic-report"),
-  ]);
-  const report = await reportResponse.json();
-  const synthesis = await synthesisResponse.json();
-
+function renderReport(report, synthesis) {
   renderMetrics(report);
   renderRuns(report);
   renderSynthesis(synthesis);
@@ -68,6 +61,78 @@ async function loadDashboard() {
   renderList("governance", report.governance_checks);
 }
 
-loadDashboard().catch((error) => {
+async function loadSampleDashboard() {
+  const [reportResponse, synthesisResponse] = await Promise.all([
+    fetch("/api/report"),
+    fetch("/api/agentic-report"),
+  ]);
+  const report = await reportResponse.json();
+  const synthesis = await synthesisResponse.json();
+
+  document.getElementById("source-label").textContent = "Using bundled sample trace.";
+  renderReport(report, synthesis);
+}
+
+async function analyzeUploadedFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch("/api/report/upload", {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Upload failed.");
+  }
+  const report = await response.json();
+  const synthesis = localSynthesisFromReport(report);
+
+  document.getElementById("source-label").textContent = `Using uploaded file: ${file.name}`;
+  renderReport(report, synthesis);
+}
+
+function localSynthesisFromReport(report) {
+  const worstRun = report.run_summaries[0];
+  const releaseDecision = report.collision_rate > 0
+    ? "Block release until collision runs are reviewed"
+    : "Review uploaded trace before release discussion";
+
+  return {
+    provider: "browser local synthesis",
+    release_decision: releaseDecision,
+    executive_summary: `${report.scenario} has ${report.run_count} simulation runs. The highest risk run is ${worstRun.run_id} with a ${worstRun.risk_level} risk level and a risk score of ${worstRun.risk_score}.`,
+    agent_steps: [
+      { name: "Trace Analyst", role: "Summarize uploaded simulation data." },
+      { name: "Safety Risk", role: "Identify risk signals from the uploaded trace." },
+      { name: "Governance", role: "Prepare traceability and release checks." },
+      { name: "Release Review", role: "Support the human decision owner." },
+    ],
+    human_ai_handoff: [
+      "The system ranks the uploaded runs; the human safety engineer owns the final release decision.",
+      "Validation engineers should review the highest risk uploaded run before accepting the analysis.",
+    ],
+  };
+}
+
+document.getElementById("upload-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const file = document.getElementById("trace-file").files[0];
+  if (!file) {
+    document.getElementById("source-label").textContent = "Choose a CSV file first.";
+    return;
+  }
+  try {
+    await analyzeUploadedFile(file);
+  } catch (error) {
+    document.getElementById("source-label").textContent = error.message;
+  }
+});
+
+document.getElementById("reset-sample").addEventListener("click", () => {
+  document.getElementById("trace-file").value = "";
+  loadSampleDashboard();
+});
+
+loadSampleDashboard().catch((error) => {
   document.querySelector("main").innerHTML = `<section class="panel"><h2>Unable to load report</h2><p>${error}</p></section>`;
 });

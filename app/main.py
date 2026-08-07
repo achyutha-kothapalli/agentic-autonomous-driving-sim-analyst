@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import ValidationError
 
 from app.agentic import build_agentic_report, stream_agentic_report
-from app.analyzer import analyze_trace, load_trace_points
+from app.analyzer import analyze_trace, load_trace_points, load_trace_points_from_csv_text
 from app.models import AgenticReport, AnalysisReport, TracePoint
 
 
@@ -37,7 +38,22 @@ def trace() -> list[TracePoint]:
 
 @app.get("/api/report", response_model=AnalysisReport)
 def report() -> AnalysisReport:
-    return analyze_trace(load_trace_points())
+    return analyze_trace(load_trace_points(), source="Scenic inspired parked vehicle pull-in scenario")
+
+
+@app.post("/api/report/upload", response_model=AnalysisReport)
+async def uploaded_report(file: UploadFile = File(...)) -> AnalysisReport:
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Upload a CSV file.")
+    try:
+        content = await file.read()
+        text = content.decode("utf-8-sig")
+        points = load_trace_points_from_csv_text(text, source_name=f"Uploaded file: {file.filename}")
+        return analyze_trace(points, source=f"Uploaded file: {file.filename}")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail="CSV must be UTF-8 encoded.") from exc
+    except (ValueError, ValidationError, KeyError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/api/agentic-report", response_model=AgenticReport)

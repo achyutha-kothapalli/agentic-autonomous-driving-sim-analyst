@@ -15,6 +15,18 @@
     </header>
 
     <main>
+      <section class="panel upload-panel">
+        <div>
+          <h2>Trace Source</h2>
+          <p id="source-label">Using bundled sample trace.</p>
+        </div>
+        <form id="upload-form">
+          <input id="trace-file" name="file" type="file" accept=".csv,text/csv" />
+          <button type="submit">Analyze CSV</button>
+          <button type="button" id="reset-sample">Use Sample</button>
+        </form>
+      </section>
+
       <section class="metrics" id="metrics"></section>
 
       <section class="layout">

@@ -1,5 +1,6 @@
 import csv
 from collections import Counter, defaultdict
+from io import StringIO
 from pathlib import Path
 
 from app.models import AnalysisReport, RunSummary, TracePoint
@@ -10,26 +11,14 @@ DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "scenic_badly_park
 
 def load_trace_points(path: Path = DATA_PATH) -> list[TracePoint]:
     with path.open(newline="", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-        return [
-            TracePoint(
-                run_id=row["run_id"],
-                scenario=row["scenario"],
-                time_s=float(row["time_s"]),
-                ego_speed_mps=float(row["ego_speed_mps"]),
-                ego_lane_offset_m=float(row["ego_lane_offset_m"]),
-                obstacle_distance_m=float(row["obstacle_distance_m"]),
-                obstacle_lateral_offset_m=float(row["obstacle_lateral_offset_m"]),
-                obstacle_speed_mps=float(row["obstacle_speed_mps"]),
-                braking=_to_bool(row["braking"]),
-                collision=_to_bool(row["collision"]),
-                intervention=_to_bool(row["intervention"]),
-            )
-            for row in reader
-        ]
+        return _read_trace_points(file, source_name="Scenic inspired parked vehicle pull-in scenario")
 
 
-def analyze_trace(points: list[TracePoint]) -> AnalysisReport:
+def load_trace_points_from_csv_text(csv_text: str, source_name: str = "Uploaded simulation trace") -> list[TracePoint]:
+    return _read_trace_points(StringIO(csv_text), source_name=source_name)
+
+
+def analyze_trace(points: list[TracePoint], source: str | None = None) -> AnalysisReport:
     if not points:
         raise ValueError("No simulation trace points supplied.")
 
@@ -49,7 +38,7 @@ def analyze_trace(points: list[TracePoint]) -> AnalysisReport:
 
     return AnalysisReport(
         scenario=scenario,
-        source="Scenic inspired parked vehicle pull-in scenario",
+        source=source or getattr(points[0], "_source_name", "Simulation trace"),
         run_count=run_count,
         collision_rate=round(collision_rate, 3),
         intervention_rate=round(intervention_rate, 3),
@@ -59,6 +48,50 @@ def analyze_trace(points: list[TracePoint]) -> AnalysisReport:
         governance_checks=_governance_checks(collision_rate, intervention_rate),
         run_summaries=summaries,
     )
+
+
+def _read_trace_points(file, source_name: str) -> list[TracePoint]:
+    reader = csv.DictReader(file)
+    missing = _missing_columns(reader.fieldnames or [])
+    if missing:
+        raise ValueError(f"Missing required CSV columns: {', '.join(missing)}")
+
+    points = [
+        TracePoint(
+            run_id=row["run_id"],
+            scenario=row["scenario"],
+            time_s=float(row["time_s"]),
+            ego_speed_mps=float(row["ego_speed_mps"]),
+            ego_lane_offset_m=float(row["ego_lane_offset_m"]),
+            obstacle_distance_m=float(row["obstacle_distance_m"]),
+            obstacle_lateral_offset_m=float(row["obstacle_lateral_offset_m"]),
+            obstacle_speed_mps=float(row["obstacle_speed_mps"]),
+            braking=_to_bool(row["braking"]),
+            collision=_to_bool(row["collision"]),
+            intervention=_to_bool(row["intervention"]),
+        )
+        for row in reader
+    ]
+    for point in points:
+        object.__setattr__(point, "_source_name", source_name)
+    return points
+
+
+def _missing_columns(fieldnames: list[str]) -> list[str]:
+    required = [
+        "run_id",
+        "scenario",
+        "time_s",
+        "ego_speed_mps",
+        "ego_lane_offset_m",
+        "obstacle_distance_m",
+        "obstacle_lateral_offset_m",
+        "obstacle_speed_mps",
+        "braking",
+        "collision",
+        "intervention",
+    ]
+    return [name for name in required if name not in fieldnames]
 
 
 def _summarize_run(run_id: str, points: list[TracePoint]) -> RunSummary:

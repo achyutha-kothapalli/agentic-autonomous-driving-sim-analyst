@@ -10,6 +10,8 @@ The app loads a small Scenic inspired trace, calculates safety metrics, ranks th
 
 It also has a local agentic synthesis layer. That layer turns the raw analysis into a release decision, agent steps, human-AI handoff notes, governance checks, and next actions. The app works without model credentials, and can optionally use OpenAI or AWS Bedrock for the executive summary.
 
+You can use the bundled sample trace or upload a CSV with the same schema for quick local analysis.
+
 ## Project Goals
 
 - Analyze autonomous driving simulation traces.
@@ -23,6 +25,7 @@ It also has a local agentic synthesis layer. That layer turns the raw analysis i
 - FastAPI backend
 - Browser dashboard with separate HTML, CSS, and JavaScript
 - Scenic inspired sample trace
+- CSV upload for new trace files
 - Deterministic safety scoring
 - Local agentic synthesis
 - Optional OpenAI and AWS Bedrock provider modes
@@ -69,6 +72,7 @@ GET /
 GET /api/health
 GET /api/trace
 GET /api/report
+POST /api/report/upload
 GET /api/agentic-report
 GET /api/agentic-report/stream
 ```
@@ -80,6 +84,12 @@ Invoke-RestMethod http://127.0.0.1:8000/api/health
 Invoke-RestMethod http://127.0.0.1:8000/api/report
 Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report
 Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report/stream
+```
+
+Upload a CSV trace:
+
+```powershell
+Invoke-RestMethod -Uri http://127.0.0.1:8000/api/report/upload -Method Post -Form @{ file = Get-Item .\data\scenic_badly_parked_pull_in.csv }
 ```
 
 ## AI Provider Modes
@@ -122,7 +132,6 @@ If a provider package, key, or cloud permission is missing, the app falls back t
 
 ## Roadmap
 
-- Add upload support for new trace files.
 - Add real Scenic generated data.
 - Add CARLA or MetaDrive simulation export examples.
 - Add scenario mutation suggestions.
