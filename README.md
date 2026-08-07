@@ -106,6 +106,8 @@ $env:DEFAULT_AWS_REGION = "us-east-1"
 $env:BEDROCK_MODEL_ID = "amazon.nova-lite-v1:0"
 ```
 
+There is a `.env.example` file with the supported settings. Keep real secrets in environment variables or a local `.env` file. Do not commit `.env`.
+
 If a provider package, key, or cloud permission is missing, the app falls back to the local synthesis so the dashboard still works.
 
 ## Project Phases
