@@ -10,7 +10,7 @@ The app loads a small Scenic inspired trace, calculates safety metrics, ranks th
 
 It also has a local agentic synthesis layer. That layer turns the raw analysis into a release decision, agent steps, human-AI handoff notes, governance checks, and next actions. The app works without model credentials, and can optionally use OpenAI or AWS Bedrock for the executive summary.
 
-You can use the bundled sample trace or upload a CSV with the same schema for quick local analysis.
+You can use the bundled sample trace, upload a CSV with the same schema, and save recent analyses to a local SQLite history.
 
 ## Project Goals
 
@@ -26,6 +26,7 @@ You can use the bundled sample trace or upload a CSV with the same schema for qu
 - Browser dashboard with separate HTML, CSS, and JavaScript
 - Scenic inspired sample trace
 - CSV upload for new trace files
+- Local SQLite history for saved analyses
 - Deterministic safety scoring
 - Local agentic synthesis
 - Optional OpenAI and AWS Bedrock provider modes
@@ -73,6 +74,9 @@ GET /api/health
 GET /api/trace
 GET /api/report
 POST /api/report/upload
+POST /api/history/sample
+GET /api/history
+GET /api/history/{item_id}/report
 GET /api/agentic-report
 GET /api/agentic-report/stream
 ```
@@ -82,6 +86,7 @@ Check the API:
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/health
 Invoke-RestMethod http://127.0.0.1:8000/api/report
+Invoke-RestMethod http://127.0.0.1:8000/api/history
 Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report
 Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report/stream
 ```
@@ -135,7 +140,6 @@ If a provider package, key, or cloud permission is missing, the app falls back t
 - Add real Scenic generated data.
 - Add CARLA or MetaDrive simulation export examples.
 - Add scenario mutation suggestions.
-- Add persistence for analysis history.
 - Deploy the API and dashboard.
 
 ## Portfolio Positioning

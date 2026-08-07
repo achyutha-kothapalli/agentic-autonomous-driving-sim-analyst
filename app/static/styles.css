@@ -142,6 +142,23 @@ ul {
   line-height: 1.5;
 }
 
+.history {
+  display: grid;
+  gap: 8px;
+}
+
+.history-item {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  width: 100%;
+}
+
+.history-item span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .runs {
   display: grid;
   gap: 12px;

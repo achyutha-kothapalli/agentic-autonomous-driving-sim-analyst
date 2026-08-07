@@ -56,3 +56,14 @@ class AgenticReport(BaseModel):
     process_architecture: list[str]
     human_ai_handoff: list[str]
     next_actions: list[str]
+
+
+class HistoryItem(BaseModel):
+    id: int
+    created_at: str
+    source: str
+    scenario: str
+    run_count: int
+    collision_rate: float
+    average_risk_score: float
+    release_decision: str

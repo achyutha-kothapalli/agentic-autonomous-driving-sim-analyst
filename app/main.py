@@ -7,7 +7,8 @@ from pydantic import ValidationError
 
 from app.agentic import build_agentic_report, stream_agentic_report
 from app.analyzer import analyze_trace, load_trace_points, load_trace_points_from_csv_text
-from app.models import AgenticReport, AnalysisReport, TracePoint
+from app.models import AgenticReport, AnalysisReport, HistoryItem, TracePoint
+from app.storage import list_history, load_report, save_analysis
 
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -49,11 +50,31 @@ async def uploaded_report(file: UploadFile = File(...)) -> AnalysisReport:
         content = await file.read()
         text = content.decode("utf-8-sig")
         points = load_trace_points_from_csv_text(text, source_name=f"Uploaded file: {file.filename}")
-        return analyze_trace(points, source=f"Uploaded file: {file.filename}")
+        uploaded = analyze_trace(points, source=f"Uploaded file: {file.filename}")
+        save_analysis(uploaded)
+        return uploaded
     except UnicodeDecodeError as exc:
         raise HTTPException(status_code=400, detail="CSV must be UTF-8 encoded.") from exc
     except (ValueError, ValidationError, KeyError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/history/sample", response_model=HistoryItem)
+def save_sample_report() -> HistoryItem:
+    return save_analysis(report())
+
+
+@app.get("/api/history", response_model=list[HistoryItem])
+def history() -> list[HistoryItem]:
+    return list_history()
+
+
+@app.get("/api/history/{item_id}/report", response_model=AnalysisReport)
+def history_report(item_id: int) -> AnalysisReport:
+    saved = load_report(item_id)
+    if saved is None:
+        raise HTTPException(status_code=404, detail="Saved analysis not found.")
+    return saved
 
 
 @app.get("/api/agentic-report", response_model=AgenticReport)

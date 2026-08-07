@@ -14,6 +14,7 @@ env/
 # Environment and runtime data
 .env
 data/memory/
+data/analysis_history.db
 
 # OS and editor files
 .DS_Store

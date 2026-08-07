@@ -61,6 +61,32 @@ function renderReport(report, synthesis) {
   renderList("governance", report.governance_checks);
 }
 
+async function renderHistory() {
+  const response = await fetch("/api/history");
+  const items = await response.json();
+  const target = document.getElementById("history");
+  if (items.length === 0) {
+    target.innerHTML = "<p>No saved analyses yet.</p>";
+    return;
+  }
+  target.innerHTML = items.map((item) => `
+    <button class="history-item" data-history-id="${item.id}">
+      <strong>${item.scenario}</strong>
+      <span>${item.source}</span>
+      <span>${pct(item.collision_rate)} collisions, risk ${item.average_risk_score}</span>
+    </button>
+  `).join("");
+
+  target.querySelectorAll(".history-item").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const reportResponse = await fetch(`/api/history/${button.dataset.historyId}/report`);
+      const report = await reportResponse.json();
+      document.getElementById("source-label").textContent = `Viewing saved analysis: ${report.source}`;
+      renderReport(report, localSynthesisFromReport(report));
+    });
+  });
+}
+
 async function loadSampleDashboard() {
   const [reportResponse, synthesisResponse] = await Promise.all([
     fetch("/api/report"),
@@ -71,6 +97,7 @@ async function loadSampleDashboard() {
 
   document.getElementById("source-label").textContent = "Using bundled sample trace.";
   renderReport(report, synthesis);
+  renderHistory();
 }
 
 async function analyzeUploadedFile(file) {
@@ -89,6 +116,7 @@ async function analyzeUploadedFile(file) {
 
   document.getElementById("source-label").textContent = `Using uploaded file: ${file.name}`;
   renderReport(report, synthesis);
+  renderHistory();
 }
 
 function localSynthesisFromReport(report) {
@@ -131,6 +159,13 @@ document.getElementById("upload-form").addEventListener("submit", async (event) 
 document.getElementById("reset-sample").addEventListener("click", () => {
   document.getElementById("trace-file").value = "";
   loadSampleDashboard();
+});
+
+document.getElementById("save-sample").addEventListener("click", async () => {
+  const response = await fetch("/api/history/sample", { method: "POST" });
+  const item = await response.json();
+  document.getElementById("source-label").textContent = `Saved sample analysis #${item.id}.`;
+  renderHistory();
 });
 
 loadSampleDashboard().catch((error) => {

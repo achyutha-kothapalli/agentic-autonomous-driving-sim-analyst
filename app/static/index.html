@@ -24,6 +24,7 @@
           <input id="trace-file" name="file" type="file" accept=".csv,text/csv" />
           <button type="submit">Analyze CSV</button>
           <button type="button" id="reset-sample">Use Sample</button>
+          <button type="button" id="save-sample">Save Sample</button>
         </form>
       </section>
 
@@ -43,6 +44,11 @@
         </div>
 
         <aside>
+          <section class="panel">
+            <h2>Recent Analyses</h2>
+            <div class="history" id="history"></div>
+          </section>
+
           <section class="panel">
             <h2>Top Risks</h2>
             <ul id="risks"></ul>
