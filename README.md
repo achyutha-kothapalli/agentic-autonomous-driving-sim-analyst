@@ -8,9 +8,9 @@ The project focuses on a [Scenic](https://scenic-lang.org/) inspired validation 
 
 The app loads a small Scenic inspired trace, calculates safety metrics, ranks the riskiest simulation runs, and shows the results in a browser dashboard.
 
-It also has a local agentic synthesis layer. That layer turns the raw analysis into a release decision, agent steps, human-AI handoff notes, governance checks, and next actions. The app works without model credentials, and can optionally use OpenAI or AWS Bedrock for the executive summary.
+It also has a local agentic synthesis layer. That layer turns the raw analysis into a release decision, agent steps, human-AI handoff notes, governance checks, next actions, and follow-up scenario variants. The app works without model credentials, and can optionally use OpenAI or AWS Bedrock for the executive summary.
 
-You can use the bundled sample trace, upload a CSV with the same schema, and save recent analyses to a local SQLite history.
+You can use the bundled sample trace, upload a CSV with the same schema, save recent analyses to a local SQLite history, and review suggested scenario variants for the next validation batch.
 
 ## Project Goals
 
@@ -18,6 +18,7 @@ You can use the bundled sample trace, upload a CSV with the same schema, and sav
 - Compute safety metrics such as time-to-collision, obstacle clearance, lane deviation, braking behavior, collision rate, and intervention rate.
 - Rank risky simulation runs for engineering review.
 - Generate governance aware validation recommendations.
+- Suggest follow-up scenario variants and acceptance criteria.
 - Provide a clear path from deterministic analysis to optional OpenAI or AWS Bedrock synthesis.
 
 ## Current Features
@@ -27,6 +28,7 @@ You can use the bundled sample trace, upload a CSV with the same schema, and sav
 - Scenic inspired sample trace
 - CSV upload for new trace files
 - Local SQLite history for saved analyses
+- Scenario variant planner for follow-up validation
 - Deterministic safety scoring
 - Local agentic synthesis
 - Optional OpenAI and AWS Bedrock provider modes
@@ -77,6 +79,7 @@ POST /api/report/upload
 POST /api/history/sample
 GET /api/history
 GET /api/history/{item_id}/report
+GET /api/scenario-variants
 GET /api/agentic-report
 GET /api/agentic-report/stream
 ```
@@ -87,6 +90,7 @@ Check the API:
 Invoke-RestMethod http://127.0.0.1:8000/api/health
 Invoke-RestMethod http://127.0.0.1:8000/api/report
 Invoke-RestMethod http://127.0.0.1:8000/api/history
+Invoke-RestMethod http://127.0.0.1:8000/api/scenario-variants
 Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report
 Invoke-RestMethod http://127.0.0.1:8000/api/agentic-report/stream
 ```
@@ -134,12 +138,13 @@ If a provider package, key, or cloud permission is missing, the app falls back t
 5. Agentic synthesis pipeline with local fallback.
 6. Optional OpenAI and AWS Bedrock provider integrations.
 7. Tests, CI, documentation, and portfolio polish.
+8. CSV upload and local SQLite analysis history.
+9. Scenario variant planner for follow-up validation batches.
 
 ## Roadmap
 
 - Add real Scenic generated data.
 - Add CARLA or MetaDrive simulation export examples.
-- Add scenario mutation suggestions.
 - Deploy the API and dashboard.
 
 ## Portfolio Positioning

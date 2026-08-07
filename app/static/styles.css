@@ -159,6 +159,47 @@ ul {
   font-size: 13px;
 }
 
+.variants {
+  display: grid;
+  gap: 10px;
+}
+
+.variant {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.variant:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.variant div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.variant h3,
+.variant h4,
+.variant p {
+  margin: 0 0 8px;
+}
+
+.variant h4 {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.priority {
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  text-transform: capitalize;
+}
+
 .runs {
   display: grid;
   gap: 12px;

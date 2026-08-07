@@ -67,3 +67,11 @@ class HistoryItem(BaseModel):
     collision_rate: float
     average_risk_score: float
     release_decision: str
+
+
+class ScenarioVariant(BaseModel):
+    name: str
+    priority: str
+    rationale: str
+    parameter_changes: list[str]
+    acceptance_criteria: list[str]

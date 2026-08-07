@@ -52,10 +52,28 @@ function renderSynthesis(synthesis) {
   `;
 }
 
-function renderReport(report, synthesis) {
+function renderVariants(variants) {
+  const target = document.getElementById("variants");
+  target.innerHTML = variants.map((variant) => `
+    <article class="variant">
+      <div>
+        <h3>${variant.name}</h3>
+        <span class="priority ${variant.priority}">${variant.priority}</span>
+      </div>
+      <p>${variant.rationale}</p>
+      <h4>Parameter changes</h4>
+      <ul>${variant.parameter_changes.map((item) => `<li>${item}</li>`).join("")}</ul>
+      <h4>Acceptance criteria</h4>
+      <ul>${variant.acceptance_criteria.map((item) => `<li>${item}</li>`).join("")}</ul>
+    </article>
+  `).join("");
+}
+
+function renderReport(report, synthesis, variants = localVariantsFromReport(report)) {
   renderMetrics(report);
   renderRuns(report);
   renderSynthesis(synthesis);
+  renderVariants(variants);
   renderList("risks", report.top_risks);
   renderList("recommendations", report.recommendations);
   renderList("governance", report.governance_checks);
@@ -82,21 +100,23 @@ async function renderHistory() {
       const reportResponse = await fetch(`/api/history/${button.dataset.historyId}/report`);
       const report = await reportResponse.json();
       document.getElementById("source-label").textContent = `Viewing saved analysis: ${report.source}`;
-      renderReport(report, localSynthesisFromReport(report));
+      renderReport(report, localSynthesisFromReport(report), localVariantsFromReport(report));
     });
   });
 }
 
 async function loadSampleDashboard() {
-  const [reportResponse, synthesisResponse] = await Promise.all([
+  const [reportResponse, synthesisResponse, variantsResponse] = await Promise.all([
     fetch("/api/report"),
     fetch("/api/agentic-report"),
+    fetch("/api/scenario-variants"),
   ]);
   const report = await reportResponse.json();
   const synthesis = await synthesisResponse.json();
+  const variants = await variantsResponse.json();
 
   document.getElementById("source-label").textContent = "Using bundled sample trace.";
-  renderReport(report, synthesis);
+  renderReport(report, synthesis, variants);
   renderHistory();
 }
 
@@ -115,7 +135,7 @@ async function analyzeUploadedFile(file) {
   const synthesis = localSynthesisFromReport(report);
 
   document.getElementById("source-label").textContent = `Using uploaded file: ${file.name}`;
-  renderReport(report, synthesis);
+  renderReport(report, synthesis, localVariantsFromReport(report));
   renderHistory();
 }
 
@@ -140,6 +160,86 @@ function localSynthesisFromReport(report) {
       "Validation engineers should review the highest risk uploaded run before accepting the analysis.",
     ],
   };
+}
+
+function localVariantsFromReport(report) {
+  const sortedRuns = [...report.run_summaries].sort((left, right) => right.risk_score - left.risk_score);
+  const variants = [];
+
+  if (report.collision_rate > 0) {
+    variants.push({
+      name: "Increase obstacle pull-in aggressiveness",
+      priority: "high",
+      rationale: "Collision evidence indicates the planner needs harder cut-in validation before release review.",
+      parameter_changes: [
+        "Reduce obstacle initial distance by 20 percent.",
+        "Move obstacle lateral offset closer to the ego lane center.",
+        "Run the scenario at the highest observed ego speed.",
+      ],
+      acceptance_criteria: [
+        "Zero collisions across the new variant batch.",
+        "Minimum time-to-collision stays above 1.5 seconds.",
+        "No manual intervention is required.",
+      ],
+    });
+  }
+
+  if (report.run_summaries.some((run) => run.interventions > 0)) {
+    variants.push({
+      name: "Replay intervention runs with sensor noise",
+      priority: "high",
+      rationale: "Human or safety-driver intervention means the autonomy stack needs robustness checks around the same trigger.",
+      parameter_changes: [
+        "Replay each intervention run with bounded perception noise.",
+        "Vary braking response delay between 0.1 and 0.4 seconds.",
+        "Keep the same road geometry for traceability.",
+      ],
+      acceptance_criteria: [
+        "Intervention rate is lower than the baseline trace.",
+        "Risk score does not increase for any replayed run.",
+        "Planner behavior remains explainable in the review report.",
+      ],
+    });
+  }
+
+  if (report.run_summaries.some((run) => run.max_lane_deviation_m >= 0.6)) {
+    variants.push({
+      name: "Stress lane keeping during evasive response",
+      priority: "medium",
+      rationale: "Large lane deviation suggests the safety envelope should be tested while the ego vehicle avoids the obstacle.",
+      parameter_changes: [
+        "Add a narrower lane boundary for the worst lane-deviation run.",
+        "Sweep ego speed around the baseline speed by plus or minus 10 percent.",
+        "Keep obstacle behavior constant to isolate lane-control behavior.",
+      ],
+      acceptance_criteria: [
+        "Maximum lane deviation remains below 0.5 meters.",
+        "No collision or intervention appears in the variant.",
+        "Brake events remain consistent with the original safety strategy.",
+      ],
+    });
+  }
+
+  if (sortedRuns.length > 0) {
+    const worst = sortedRuns[0];
+    variants.push({
+      name: `Build regression pack around ${worst.run_id}`,
+      priority: worst.risk_score < 70 ? "medium" : "high",
+      rationale: "The highest-risk run should become a repeatable regression case for future model or planner changes.",
+      parameter_changes: [
+        `Use ${worst.run_id} as the seed trace.`,
+        "Generate boundary cases around obstacle distance, ego speed, and braking delay.",
+        "Label the pack with scenario, source, and baseline release decision.",
+      ],
+      acceptance_criteria: [
+        "Regression pack is reproducible from versioned input data.",
+        "Each run has a stored report and release recommendation.",
+        "Any increase in risk score blocks automatic approval.",
+      ],
+    });
+  }
+
+  return variants.slice(0, 4);
 }
 
 document.getElementById("upload-form").addEventListener("submit", async (event) => {

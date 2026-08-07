@@ -1,4 +1,4 @@
-from app.main import agentic_report, app, health, report, trace
+from app.main import agentic_report, app, health, report, scenario_variants, trace
 
 
 def test_api_routes_are_registered():
@@ -11,6 +11,7 @@ def test_api_routes_are_registered():
     assert "/api/history" in routes
     assert "/api/history/sample" in routes
     assert "/api/history/{item_id}/report" in routes
+    assert "/api/scenario-variants" in routes
     assert "/api/agentic-report" in routes
     assert "/api/agentic-report/stream" in routes
 
@@ -38,3 +39,11 @@ def test_agentic_endpoint_returns_synthesis():
 
     assert synthesis.release_decision.startswith("Block release")
     assert synthesis.agent_steps[0].name == "Trace Analyst"
+
+
+def test_scenario_variants_endpoint_returns_follow_up_plans():
+    variants = scenario_variants()
+
+    assert variants[0].priority == "high"
+    assert variants[0].parameter_changes
+    assert variants[0].acceptance_criteria

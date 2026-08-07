@@ -7,7 +7,8 @@ from pydantic import ValidationError
 
 from app.agentic import build_agentic_report, stream_agentic_report
 from app.analyzer import analyze_trace, load_trace_points, load_trace_points_from_csv_text
-from app.models import AgenticReport, AnalysisReport, HistoryItem, TracePoint
+from app.models import AgenticReport, AnalysisReport, HistoryItem, ScenarioVariant, TracePoint
+from app.scenarios import suggest_scenario_variants
 from app.storage import list_history, load_report, save_analysis
 
 
@@ -75,6 +76,11 @@ def history_report(item_id: int) -> AnalysisReport:
     if saved is None:
         raise HTTPException(status_code=404, detail="Saved analysis not found.")
     return saved
+
+
+@app.get("/api/scenario-variants", response_model=list[ScenarioVariant])
+def scenario_variants() -> list[ScenarioVariant]:
+    return suggest_scenario_variants(report())
 
 
 @app.get("/api/agentic-report", response_model=AgenticReport)
